@@ -19,14 +19,14 @@
             return $('label[for=' + input.id +']').text();
           }
         },
-        defaultText,
+        delay = 50, loadDelay = 100,
         selector = this.selector,
         $form = this.parents('form:first');
 
     $form
     .bind('blurText.dt', function(event) {
       var $tgt = $(event.target),
-          prevClass = $tgt.data('dtInfo').prevClass;
+          prevClass = $tgt.data('dtInfo') && $tgt.data('dtInfo').prevClass || '';
       if ($.trim($tgt.val()) === '') {
         $tgt.prev(prevClass).show();
       } else {
@@ -38,7 +38,10 @@
       $(tgt).prev().hide();
       if (!$(el).is(':dtinput')) {
         tgt.focus();
-      } 
+      }         
+    })
+    .bind('keyupText.dt', function(event) {
+      
     });
     
     this.filter(':dtinput').each(function() {
@@ -81,14 +84,26 @@
         });
         
         // conditionally show default text on input blur
-        $input.bind('blur', function(event) {
-          $(this).trigger('blurText.dt');
+        $input
+        .bind('blur', function(event) {
+          $form.find(':dtinput').trigger('blurText.dt');
+        })
+        .bind('keyup', function(event) {
+          if (event.which != 9) {
+            setTimeout(function() {
+              $form.find(':dtinput').filter(function() {
+                return $.data(event.target) != $.data(this);
+              }).trigger('blurText.dt');
+            }, delay);
+          }
         });
         
         // trigger the focs and blur when the window has loaded
         $(window).bind('load', function() {
-          $input.trigger('focusText.dt', $input);
-          $input.trigger('blurText.dt');
+          setTimeout(function() {
+            $input.trigger('focusText.dt', $input);
+            $input.trigger('blurText.dt');
+          }, delay+loadDelay);
         });
     });
 
