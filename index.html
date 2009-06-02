@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<head>
+  <title>Default Text jQuery Plugin</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <style type="text/css">
+    html, body { margin: 0; padding: 0; border: 0; font: .85em/1.4em Helvetica, Arial, sans-serif; }
+    .container { width: 800px; margin: 20px auto; }
+    
+    .default-text { padding: 3px 0 0 4px; }
+  </style>  
+  
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js" type="text/javascript"></script>
+  <script src="jquery.defaulttext.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('form input').slice(0,2).defaulttext();
+    }); 
+</script>
+  
+</head>
+<body>
+<div id="header" class="container">
+  <h1>Default Text jQuery Plugin</h1>  
+</div><!-- close header -->
+
+<div id="content" class="container">
+    
+  <form action="#" class="base" method="get"> 
+    <fieldset> 
+      <legend>Search Site</legend>
+      <div class="text">
+        <label for="srch-global" class="access">Search Terms</label>
+        <input type="text" title="Search..." class="search" id="srch-global" />
+      </div>
+      <div class="text">
+        <label for="dummy">Dummy Field</label>
+        <input id="dummy" name="dummy" type="text" />
+      </div>
+    </fieldset>
+  </form>
+  
+</div>
+</body>
+</html>
