@@ -76,16 +76,23 @@
           .insertBefore($input);
 
         // hide default text on focus
-        $input.bind('focus', function(event) {
+        var focused;
+        $input
+        .bind('focus', function(event) {
           $input.trigger('focusText.dt', event.target);
+          focused = setTimeout(function() {
+            $input.trigger('focusText.dt', event.target);
+          }, delay);
         });
-        $input.prev($input.data('dtInfo').prevClass).bind('click', function(event) {
+        $input.prev($input.data('dtInfo').prevClass)
+        .bind('click', function(event) {
           $input.trigger('focusText.dt', event.target);
         });
         
         // conditionally show default text on input blur
         $input
         .bind('blur', function(event) {
+          clearTimeout(focused);
           $form.find(':dtinput').trigger('blurText.dt');
         })
         .bind('keyup', function(event) {
@@ -98,7 +105,7 @@
           }
         });
         
-        // trigger the focs and blur when the window has loaded
+        // trigger the focus and blur when the window has loaded
         $(window).bind('load', function() {
           setTimeout(function() {
             $input.trigger('focusText.dt', $input);
