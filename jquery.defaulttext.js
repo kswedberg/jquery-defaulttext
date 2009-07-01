@@ -49,7 +49,7 @@
         var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
         // set the default text based on the value of the text option
         if (opts.text.constructor === Function) {
-          $input.data('defaultText', opts.text(this));
+          $input.data('dtInfo', {text: opts.text(this)});
         } else if (opts.text && opts.text.constructor === String){
           $input.data('dtInfo', {
             text: ((/(title|label)/).test(opts.text) ? elText[opts.text](this) : opts.text)
@@ -71,6 +71,7 @@
             position: 'absolute',
             top: $input.position().top,
             left: $input.position().left,
+            width: $input.width(),
             display: 'none'
           })
           .insertBefore($input);
