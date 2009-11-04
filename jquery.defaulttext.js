@@ -57,6 +57,9 @@
         }
       } 
       if (!opts.text) {return;}
+      if ('placeholder' in this) {
+        return this.placeholder = opts.text;
+      }
       $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
       
       if ($input.parent().css('position') == 'static') {
