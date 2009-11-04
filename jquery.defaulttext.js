@@ -46,78 +46,76 @@
     
     this.filter(':dtinput').each(function() {
       var $input = $(this);
-        var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
-        // set the default text based on the value of the text option
-        if (opts.text.constructor === Function) {
-          $input.data('dtInfo', {text: opts.text(this)});
-        } else if (opts.text && opts.text.constructor === String){
-          $input.data('dtInfo', {
-            text: ((/(title|label)/).test(opts.text) ? elText[opts.text](this) : opts.text)
-          });
-          if (opts.text === 'label') {
-            $('label[for= '+ this.id + ']').css({position: 'absolute', left: '-4000em'});
-          }
-        } 
-        if (!$input.data('dtInfo').text) {return $input.removeData('dtInfo');}
-        
-        $input.data('dtinfo', {prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
-        
-        if ($input.parent().css('position') == 'static') {
-          $input.parent().css({position: 'relative'});
+      var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
+      // set the default text based on the value of the text option
+      if (opts.text.constructor === Function) {
+        opts.text = opts.text.call(this);
+      } else if (opts.text && opts.text.constructor === String){
+        opts.text = (/(title|label)/).test(opts.text) ? elText[opts.text](this) : opts.text;
+        if (opts.text === 'label') {
+          $('label[for= '+ this.id + ']').css({position: 'absolute', left: '-4000em'});
         }
-        $(opts.tag).html($input.data('dtInfo').text)
-          .addClass(opts.defaultClass)
-          .css({
-            position: 'absolute',
-            top: $input.position().top,
-            left: $input.position().left,
-            width: $input.width(),
-            display: 'none'
-          })
-          .insertBefore($input);
+      } 
+      if (!opts.text) {return;}
+      $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
+      
+      if ($input.parent().css('position') == 'static') {
+        $input.parent().css({position: 'relative'});
+      }
+      $(opts.tag).html($input.data('dtInfo').text)
+      .addClass(opts.defaultClass)
+      .css({
+        position: 'absolute',
+        top: $input.position().top,
+        left: $input.position().left,
+        width: $input.width(),
+        display: 'none'
+      })
+      .insertBefore($input);
 
-        // hide default text on focus
-        var focused;
-        $input
-        .bind('focus', function(event) {
+      // hide default text on focus
+      var focused;
+      $input
+      .bind('focus', function(event) {
+        $input.trigger('focusText.dt', event.target);
+        focused = setTimeout(function() {
           $input.trigger('focusText.dt', event.target);
-          focused = setTimeout(function() {
-            $input.trigger('focusText.dt', event.target);
-          }, delay);
-        });
-        $input.prev($input.data('dtInfo').prevClass)
-        .bind('click', function(event) {
-          $input.trigger('focusText.dt', event.target);
-        });
-        
-        // conditionally show default text on input blur
-        $input
-        .bind('blur', function(event) {
-          clearTimeout(focused);
-          $form.find(':dtinput').trigger('blurText.dt');
-        })
-        .bind('keyup', function(event) {
-          if (event.which != 9) {
-            setTimeout(function() {
-              $form.find(':dtinput').filter(function() {
-                return $.data(event.target) != $.data(this);
-              }).trigger('blurText.dt');
-            }, delay);
-          }
-        });
-        
-        // trigger the focus and blur when the window has loaded
-        $(window).bind('load', function() {
+        }, delay);
+      });
+      $input.prev($input.data('dtInfo').prevClass)
+      .bind('click', function(event) {
+        $input.trigger('focusText.dt', event.target);
+      });
+      
+      // conditionally show default text on input blur
+      $input
+      .bind('blur', function(event) {
+        clearTimeout(focused);
+        $form.find(':dtinput').trigger('blurText.dt');
+      })
+      .bind('keyup', function(event) {
+        if (event.which != 9) {
           setTimeout(function() {
-            $input.trigger('focusText.dt', $input);
-            $input.trigger('blurText.dt');
-          }, delay+loadDelay);
-        });
+            $form.find(':dtinput').filter(function() {
+              return $.data(event.target) != $.data(this);
+            }).trigger('blurText.dt');
+          }, delay);
+        }
+      });
+      
+      // trigger the focus and blur when the window has loaded
+      $(window).bind('load', function() {
+        setTimeout(function() {
+          $input.trigger('focusText.dt', $input);
+          $input.trigger('blurText.dt');
+        }, delay+loadDelay);
+      });
     });
 
     function dtHide(el) {
       el.prev().hide();
     }
+    
     return this;
   };
 
@@ -125,7 +123,7 @@
     tag: '<span></span>',
     defaultClass: 'default-text',
     text: 'label'            // 'label' uses text of input's label; 'title' uses input's title attribute. 
-                              //  otherwise, use some other string or function
+                              //  otherwise, use some other string or return a value from a function
   };
 
 
