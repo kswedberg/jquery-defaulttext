@@ -1,27 +1,28 @@
 /***************************************
 * Default Text Plugin for inputs
 * @author Karl Swedberg
-* @version 1.0 (03/30/2009)
+* @version 1.1 (November 4, 2009)
 * @requires jQuery v1.3+ 
 ************************************** */
 
-
-
-(function($){
+;(function($){
 		
   $.fn.defaulttext = function(options) {
     
     var elText = { 
-          title: function(input) {
-            return $(input).attr('title');
-          },
-          label: function(input) {
-            return $('label[for=' + input.id +']').text();
-          }
-        },
-        delay = 50, loadDelay = 100,
-        selector = this.selector,
-        $form = this.parents('form:first');
+      title: function(input) {
+        return $(input).attr('title');
+      },
+      placeholder: function(input) {
+        return $(input).attr('placeholder');
+      },
+      label: function(input) {
+        return $('label[for=' + input.id +']').text();
+      }
+    },
+    delay = 50, loadDelay = 100,
+    selector = this.selector,
+    $form = this.parents('form:first');
 
     $form
     .bind('blurText.dt', function(event) {
@@ -47,14 +48,15 @@
     this.filter(':dtinput').each(function() {
       var $input = $(this);
       var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
+ 
       // set the default text based on the value of the text option
       if (opts.text.constructor === Function) {
         opts.text = opts.text.call(this);
-      } else if (opts.text && opts.text.constructor === String){
-        opts.text = (/(title|label)/).test(opts.text) ? elText[opts.text](this) : opts.text;
+      } else if (opts.text && opts.text.constructor === String) {
         if (opts.text === 'label') {
           $('label[for= '+ this.id + ']').css({position: 'absolute', left: '-4000em'});
         }
+        opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
       } 
       if (!opts.text) {return;}
       if ('placeholder' in this) {
@@ -107,6 +109,7 @@
       });
       
       // trigger the focus and blur when the window has loaded
+      // trigger is delayed to work around a race condition in Safari's autofill
       $(window).bind('load', function() {
         setTimeout(function() {
           $input.trigger('focusText.dt', $input);
@@ -125,7 +128,9 @@
   $.fn.defaulttext.defaults = {
     tag: '<span></span>',
     defaultClass: 'default-text',
-    text: 'label'            // 'label' uses text of input's label; 'title' uses input's title attribute. 
+    text: 'label'             // 'label' uses text of input's label
+                              // 'title' uses input's title attribute
+                              // 'placeholder' uses HTML5 "placeholder" attribute
                               //  otherwise, use some other string or return a value from a function
   };
 
