@@ -22,7 +22,7 @@
     },
     delay = 50, loadDelay = 100,
     selector = this.selector,
-    $form = this.parents('form:first');
+    $form = this.closest('form');
 
     $form
     .bind('blurText.dt', function(event) {
