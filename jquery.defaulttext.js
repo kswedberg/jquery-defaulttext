@@ -1,11 +1,11 @@
 /***************************************
 * Default Text Plugin for inputs
 * @author Karl Swedberg
-* @version 1.1 (November 4, 2009)
+* @version 1.2 (March 29, 2010)
 * @requires jQuery v1.3+ 
 ************************************** */
 
-;(function($){
+(function($){
 		
   $.fn.defaulttext = function(options) {
     
@@ -46,6 +46,7 @@
     });
     
     this.filter(':dtinput').each(function() {
+      
       var $input = $(this);
       var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
  
@@ -59,9 +60,11 @@
         opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
       } 
       if (!opts.text) {return;}
+
       if ('placeholder' in this) {
         return this.placeholder = opts.text;
       }
+
       $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
       
       if ($input.parent().css('position') == 'static') {
@@ -82,6 +85,7 @@
       var focused;
       $input
       .bind('focus', function(event) {
+        
         $input.trigger('focusText.dt', event.target);
         focused = setTimeout(function() {
           $input.trigger('focusText.dt', event.target);
@@ -96,16 +100,7 @@
       $input
       .bind('blur', function(event) {
         clearTimeout(focused);
-        $form.find(':dtinput').trigger('blurText.dt');
-      })
-      .bind('keyup', function(event) {
-        if (event.which != 9) {
-          setTimeout(function() {
-            $form.find(':dtinput').filter(function() {
-              return $.data(event.target) != $.data(this);
-            }).trigger('blurText.dt');
-          }, delay);
-        }
+        $input.trigger('blurText.dt');
       });
       
       // trigger the focus and blur when the window has loaded
@@ -137,7 +132,8 @@
 
   $.extend($.expr[':'], {
     dtinput: function(element, index, matches, set) {
-      return (/text|password/i).test(element.type) || element.nodeName.toLowerCase() === 'textarea';
+      var tag = element.nodeName.toLowerCase();
+      return ( tag === 'input' && !(/file|checkbox|radio/i).test(element.type) ) || tag === 'textarea';
     }
   });
   
