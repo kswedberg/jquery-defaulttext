@@ -3,6 +3,13 @@
 * @author Karl Swedberg
 * @version 1.3 (April 8, 2010)
 * @requires jQuery v1.3+
+
+* @author Karl Swedberg
+*
+* Dual licensed under the MIT and GPL licenses (just like jQuery):
+* http://www.opensource.org/licenses/mit-license.php
+* http://www.gnu.org/licenses/gpl.html
+
 ************************************** */
 
 (function($){
@@ -58,7 +65,7 @@
         opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
       }
 
-      if (!opts.text || $.support.placeholder) { return; }
+      if (!opts.text || ($.support.placeholder && this.placeholder.length)) { return; }
 
       $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
 
@@ -118,7 +125,8 @@
   $.fn.defaulttext.defaults = {
     tag: '<span></span>',
     defaultClass: 'default-text',
-    text: 'label'             // 'label' uses text of input's label
+    text: 'placeholder'             // 'placeholder' uses HTML5 "placeholder" attribute
+                              // 'label' uses text of input's label
                               // 'title' uses input's title attribute
                               // 'placeholder' uses HTML5 "placeholder" attribute
                               //  otherwise, use some other string or return a value from a function
@@ -127,7 +135,7 @@
   $.extend($.expr[':'], {
     dtinput: function(element, index, matches, set) {
       var tag = element.nodeName.toLowerCase();
-      return ( tag === 'input' && !(/file|checkbox|radio/i).test(element.type) ) || tag === 'textarea';
+      return ( tag === 'input' && !(/hidden|file|checkbox|radio/i).test(element.type) ) || tag === 'textarea';
     }
   });
 
