@@ -1,15 +1,15 @@
 /***************************************
 * Default Text Plugin for inputs
 * @author Karl Swedberg
-* @version 1.2 (March 29, 2010)
-* @requires jQuery v1.3+ 
+* @version 1.3 (April 8, 2010)
+* @requires jQuery v1.3+
 ************************************** */
 
 (function($){
-		
+
   $.fn.defaulttext = function(options) {
-    
-    var elText = { 
+
+    var elText = {
       title: function(input) {
         return $(input).attr('title');
       },
@@ -39,17 +39,14 @@
       $(tgt).prev().hide();
       if (!$(el).is(':dtinput')) {
         tgt.focus();
-      }         
-    })
-    .bind('keyupText.dt', function(event) {
-      
+      }
     });
-    
+
     this.filter(':dtinput').each(function() {
-      
+
       var $input = $(this);
       var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
- 
+
       // set the default text based on the value of the text option
       if (opts.text.constructor === Function) {
         opts.text = opts.text.call(this);
@@ -57,16 +54,14 @@
         if (opts.text === 'label') {
           $('label[for= '+ this.id + ']').css({position: 'absolute', left: '-4000em'});
         }
-        opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
-      } 
-      if (!opts.text) {return;}
 
-      if ('placeholder' in this) {
-        return this.placeholder = opts.text;
+        opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
       }
 
+      if (!opts.text || $.support.placeholder) { return; }
+
       $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
-      
+
       if ($input.parent().css('position') == 'static') {
         $input.parent().css({position: 'relative'});
       }
@@ -85,7 +80,7 @@
       var focused;
       $input
       .bind('focus', function(event) {
-        
+
         $input.trigger('focusText.dt', event.target);
         focused = setTimeout(function() {
           $input.trigger('focusText.dt', event.target);
@@ -95,14 +90,14 @@
       .bind('click', function(event) {
         $input.trigger('focusText.dt', event.target);
       });
-      
+
       // conditionally show default text on input blur
       $input
       .bind('blur', function(event) {
         clearTimeout(focused);
         $input.trigger('blurText.dt');
       });
-      
+
       // trigger the focus and blur when the window has loaded
       // trigger is delayed to work around a race condition in Safari's autofill
       $(window).bind('load', function() {
@@ -116,7 +111,7 @@
     function dtHide(el) {
       el.prev().hide();
     }
-    
+
     return this;
   };
 
@@ -129,12 +124,16 @@
                               //  otherwise, use some other string or return a value from a function
   };
 
-
   $.extend($.expr[':'], {
     dtinput: function(element, index, matches, set) {
       var tag = element.nodeName.toLowerCase();
       return ( tag === 'input' && !(/file|checkbox|radio/i).test(element.type) ) || tag === 'textarea';
     }
   });
-  
+
+  var inp = document.createElement('input');
+  $.extend($.support, {
+    placeholder: 'placeholder' in inp
+  });
+  inp = null;
 })(jQuery);
