@@ -63,7 +63,7 @@
         opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
       }
 
-      if (!opts.text || ($.support.placeholder && this.placeholder.length)) { return; }
+      if (!opts.text || ($.support.placeholder && this.placeholder && this.placeholder.length)) { return; }
 
       $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
 
