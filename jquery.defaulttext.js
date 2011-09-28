@@ -1,20 +1,33 @@
-/***************************************
-* Default Text Plugin for inputs
-* @author Karl Swedberg
-* @version 1.3 (April 8, 2010)
-* @requires jQuery v1.3+
-*
-* Dual licensed under the MIT and GPL licenses (just like jQuery):
-* http://www.opensource.org/licenses/mit-license.php
-* http://www.gnu.org/licenses/gpl.html
+/*!
+ * jQuery Default (placeholder) Text Plugin for inputs v1.4
+ *
+ * Date: Wed Sep 28 14:48:57 2011 EDT
+ * Requires: jQuery v1.3+
+ *
+ * Copyright 2011, Karl Swedberg
+ * Dual licensed under the MIT and GPL licenses (just like jQuery):
+ * http://www.opensource.org/licenses/mit-license.php
+ * http://www.gnu.org/licenses/gpl.html
+ *
+ *
+ *
+ *
+*/
 
-************************************** */
 
 (function($){
+  if ( typeof $.fn.defaulttext !== 'undefined' ) { return; }
 
   $.fn.defaulttext = function(options) {
+    var $inputs = this.filter(':dtinput');
+    if ( !$inputs.length ) {
+      return this;
+    }
 
-    var elText = {
+    options = $.extend(true, $.fn.defaulttext.defaults, options || {});
+
+    var focused,
+        elText = {
       title: function(input) {
         return $(input).attr('title');
       },
@@ -22,40 +35,31 @@
         return $(input).attr('placeholder');
       },
       label: function(input) {
-        return $('label[for=' + input.id +']').text();
+        return $('label[for=' + input.id +']').html();
       }
     },
     delay = 50, loadDelay = 100,
     selector = this.selector,
     $form = this.closest('form');
 
-    $form
-    .bind('blurText.dt', function(event) {
-      var $tgt = $(event.target),
-          prevClass = $tgt.data('dtInfo') && $tgt.data('dtInfo').prevClass || '';
-      if ($.trim($tgt.val()) === '') {
-        $tgt.prev(prevClass).show();
-      } else {
-        $tgt.prev(prevClass).hide();
-      }
-    })
-    .bind('focusText.dt', function(event, el) {
-      var tgt = event.target;
-      $(tgt).prev().hide();
-      if (!$(el).is(':dtinput')) {
-        tgt.focus();
-      }
-    });
+    if ( !$form.data('defaulttext') ) {
+      $form.data('defaulttext', true);
+    }
 
-    this.filter(':dtinput').each(function() {
+    $inputs.each(function() {
 
-      var $input = $(this);
-      var opts = $.extend({}, $.fn.defaulttext.defaults, options || {}, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
+      var aniProps, textLabel,
+          currProps = {},
+          $input = $(this),
+          opts = $.extend({}, $.fn.defaulttext.defaults, options, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
+
+      opts.prevClass = opts.defaultClass ? '.' + opts.defaultClass : '';
+
 
       // set the default text based on the value of the text option
-      if (opts.text.constructor === Function) {
+      if (opts.text && opts.text.constructor === Function) {
         opts.text = opts.text.call(this);
-      } else if (opts.text && opts.text.constructor === String) {
+      } else if (typeof opts.text === 'string') {
         if (opts.text === 'label') {
           $('label[for= '+ this.id + ']').css({position: 'absolute', left: '-4000em'});
         }
@@ -65,12 +69,11 @@
 
       if (!opts.text || ($.support.placeholder && this.placeholder && this.placeholder.length)) { return; }
 
-      $input.data('dtInfo', {text: opts.text, prevClass: opts.defaultClass ? '.' + opts.defaultClass : ''});
-
       if ($input.parent().css('position') == 'static') {
         $input.parent().css({position: 'relative'});
       }
-      $(opts.tag).html($input.data('dtInfo').text)
+
+      textLabel = $(opts.tag).html(opts.text)
       .addClass(opts.defaultClass)
       .css({
         position: 'absolute',
@@ -81,53 +84,137 @@
       })
       .insertBefore($input);
 
-      // hide default text on focus
-      var focused;
-      $input
-      .bind('focus', function(event) {
+      if (opts.aniProps) {
+        aniProps = opts.aniProps || {};
+        $.each(aniProps, function(prop, val) {
+          currProps[prop] = textLabel.css(prop);
+        });
+        opts.currProps = currProps;
+        opts.aniSpeed = ('aniSpeed' in opts) ? opts.aniSpeed : 400;
+      }
 
-        $input.trigger('focusText.dt', event.target);
-        focused = setTimeout(function() {
-          $input.trigger('focusText.dt', event.target);
-        }, delay);
-      });
-      $input.prev($input.data('dtInfo').prevClass)
-      .bind('click', function(event) {
-        $input.trigger('focusText.dt', event.target);
-      });
+      $input.data('dtInfo', opts);
 
-      // conditionally show default text on input blur
-      $input
-      .bind('blur', function(event) {
-        clearTimeout(focused);
-        $input.trigger('blurText.dt');
-      });
+      if ( opts.showOnHover ) {
+        $input.parent().bind('mouseenter.dt mouseleave.dt', function(event) {
+          var val = $.trim( $input.val() );
+          if ( val !== '' && !$input.data('dtFocused') ) {
+            $input.prev().toggle(event.type == 'mouseenter');
+          }
 
-      // trigger the focus and blur when the window has loaded
-      // trigger is delayed to work around a race condition in Safari's autofill
-      $(window).bind('load', function() {
-        setTimeout(function() {
-          $input.trigger('focusText.dt', $input);
-          $input.trigger('blurText.dt');
-        }, delay+loadDelay);
-      });
+        });
+      }
+    }); // end each
+
+    // functions for showing/hiding placeholder text
+    function focusText(event, skip) {
+      clearTimeout(focused);
+      var tgt = event.target,
+          $tgt = $(tgt),
+          info = $tgt.data('dtInfo');
+
+      // bail if this input hasn't been set up
+      if ( !info ) {
+        return false;
+      }
+
+      $tgt.data('dtFocused', true);
+
+      if (info.aniProps && skip !== 'skip') {
+        $tgt.prev().show().animate(info.aniProps, info.aniSpeed, info.focusComplete);
+      } else {
+        $tgt.prev().hide();
+        if ( skip !== 'skip' ) {
+          info.focusComplete.call(event.target);
+        }
+      }
+    }
+
+    function blurText(event, skip) {
+      clearTimeout(focused);
+      var $prev, prevClass, isBlank,
+          $tgt = $(event.target),
+          info = $tgt.data('dtInfo');
+
+      // bail if this input hasn't been set up
+      if ( !info) {
+        return false;
+      }
+
+      prevClass = info.prevClass || '';
+      $prev = $tgt.prev(prevClass);
+      isBlank = $.trim($tgt.val()) === '';
+
+      $tgt.removeData('dtFocused');
+      if (info.currProps && skip !== 'skip') {
+        $prev.animate(info.currProps, info.aniSpeed, info.blurComplete);
+      } else if (skip !== 'skip') {
+        info.blurComplete.call(event.target);
+      }
+      if ( isBlank ) {
+        $prev.show();
+      } else {
+        $prev.hide();
+      }
+    }
+
+    // bind handlers to inputs' events
+    $inputs.bind('focus.dt', focusText);
+    $inputs.bind('blur.dt', blurText);
+    $inputs.prev()
+    .bind('click.dt', function(event) {
+      $(this).next().trigger('focus.dt');
     });
 
-    function dtHide(el) {
-      el.prev().hide();
-    }
+    // custom events to programmatically show/hide:
+    $(document)
+    .bind('focusText.dt', focusText)
+    .bind('blurText.dt', blurText);
+
+    // trigger the focus and blur when the window has loaded
+    // trigger is delayed to work around a race condition in Safari's autofill
+    $(window).bind('load', function() {
+      setTimeout(function() {
+        $inputs.each(function() {
+
+          focusText({
+            target: this
+          }, 'skip');
+
+          blurText({
+            target: this
+          }, 'skip');
+
+        });
+      }, delay+loadDelay);
+    });
 
     return this;
   };
 
+  $.noop = $.noop || function() {};
+
   $.fn.defaulttext.defaults = {
     tag: '<span></span>',
     defaultClass: 'default-text',
-    text: 'placeholder'             // 'placeholder' uses HTML5 "placeholder" attribute
-                              // 'label' uses text of input's label
-                              // 'title' uses input's title attribute
-                              // 'placeholder' uses HTML5 "placeholder" attribute
-                              //  otherwise, use some other string or return a value from a function
+
+    // 'placeholder' uses HTML5 "placeholder" attribute
+    // 'label' uses text of input's label
+    // 'title' uses input's title attribute
+    // 'placeholder' uses HTML5 "placeholder" attribute
+    //  otherwise, use some other string or return a value from a function
+    text: 'placeholder',
+
+    // apply some kind of effect on focus/blur
+    // aniProps: {marginTop: '-16px'},
+    // aniSpeed: 400,
+
+    // functions called after focus and blur
+    focusComplete: $.noop,
+    blurComplete: $.noop,
+
+    // trigges focus/blur on mouseenter/mouseleave
+    showOnHover: false
   };
 
   $.extend($.expr[':'], {
