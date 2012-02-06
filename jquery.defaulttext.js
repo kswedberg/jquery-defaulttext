@@ -109,7 +109,8 @@
     // functions for showing/hiding placeholder text
     function focusText(event, skip) {
       clearTimeout(focused);
-      var tgt = event.target,
+      var prevClass,
+          tgt = event.target,
           $tgt = $(tgt),
           info = $tgt.data('dtInfo');
 
@@ -118,12 +119,14 @@
         return false;
       }
 
+      prevClass = info.prevClass || '';
+
       $tgt.data('dtFocused', true);
 
       if (info.aniProps && skip !== 'skip') {
-        $tgt.prev().show().animate(info.aniProps, info.aniSpeed, info.focusComplete);
+        $tgt.prev(prevClass).show().animate(info.aniProps, info.aniSpeed, info.focusComplete);
       } else {
-        $tgt.prev().hide();
+        $tgt.prev(prevClass).hide();
         if ( skip !== 'skip' ) {
           info.focusComplete.call(event.target);
         }
