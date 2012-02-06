@@ -1,7 +1,7 @@
 /*!
  * jQuery Default (placeholder) Text Plugin for inputs v1.4
  *
- * Date: Wed Sep 28 14:48:57 2011 EDT
+ * Date: Mon Feb 06 16:05:29 2012 EST
  * Requires: jQuery v1.3+
  *
  * Copyright 2011, Karl Swedberg
