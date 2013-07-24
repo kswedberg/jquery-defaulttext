@@ -4,7 +4,7 @@ This is a simple jQuery plugin that overlays a span on top of the matched set of
 
 The placeholder attribute will always take precedence, if the browser supports it and if the author has added the attribute to the input in the markup.
 
-Unlike many "placeholder" plugins, this one doesn't set the input's value. Instead, it take a less obtrusive approach, showing and hiding the placeholder text in a separate element (unless, of course, the placeholder attribute is chosen).
+Unlike many "placeholder" plugins, this one doesn't set the input's value. Instead, it takes a less obtrusive approach, showing and hiding the placeholder text in a separate element (unless, of course, the placeholder attribute is chosen).
 
 ## Options
 
@@ -12,6 +12,10 @@ The plugin comes with a few options. Here are the defaults, all of which can be 
 
 ```javascript
 {
+
+  // The element to use for the "default text." 
+  // If the text option is "label", the label is used for the default text,
+  // regardless of this option's value
   tag: '<span></span>',
   defaultClass: 'default-text',
 
@@ -30,7 +34,7 @@ The plugin comes with a few options. Here are the defaults, all of which can be 
   focusComplete: $.noop,
   blurComplete: $.noop,
 
-  // trigges focus/blur on mouseenter/mouseleave
+  // triggers focus/blur on mouseenter/mouseleave
   showOnHover: false
 }
 ```

@@ -1,7 +1,7 @@
 /*!
- * jQuery Default (placeholder) Text Plugin for inputs v1.4
+ * jQuery Default (placeholder) Text Plugin for inputs v1.4.1
  *
- * Date: Mon Feb 06 16:05:29 2012 EST
+ * Date: Wed Jul 24 17:16:29 2013 EDT
  * Requires: jQuery v1.3+
  *
  * Copyright 2011, Karl Swedberg
@@ -39,7 +39,6 @@
       }
     },
     delay = 50, loadDelay = 100,
-    selector = this.selector,
     $form = this.closest('form');
 
     if ( !$form.data('defaulttext') ) {
@@ -51,17 +50,19 @@
       var aniProps, textLabel,
           currProps = {},
           $input = $(this),
-          opts = $.extend({}, $.fn.defaulttext.defaults, options, $.metadata ? $input.metadata() : $.meta ? $input.data() : {});
+          opts = $.extend({}, $.fn.defaulttext.defaults, options, $.metadata ? $input.metadata() : $.meta ? $input.data() : {}),
+          textType = opts.text;
 
       opts.prevClass = opts.defaultClass ? '.' + opts.defaultClass : '';
 
 
       // set the default text based on the value of the text option
-      if (opts.text && opts.text.constructor === Function) {
+      if (textType && opts.text.constructor === Function) {
         opts.text = opts.text.call(this);
       } else if (typeof opts.text === 'string') {
-        if (opts.text === 'label') {
-          $('label[for= '+ this.id + ']').css({position: 'absolute', left: '-4000em'});
+        if (textType === 'label') {
+          opts.tag = 'label[for= '+ this.id + ']';
+          // $().css({position: 'absolute', left: '-4000em'});
         }
 
         opts.text = (/(title|label|placeholder)/).test(opts.text) ? elText[opts.text](this) : opts.text;
@@ -69,7 +70,7 @@
 
       if (!opts.text || ($.support.placeholder && this.placeholder && this.placeholder.length)) { return; }
 
-      if ($input.parent().css('position') == 'static') {
+      if ($input.parent().css('position') === 'static') {
         $input.parent().css({position: 'relative'});
       }
 
@@ -86,7 +87,7 @@
 
       if (opts.aniProps) {
         aniProps = opts.aniProps || {};
-        $.each(aniProps, function(prop, val) {
+        $.each(aniProps, function(prop) {
           currProps[prop] = textLabel.css(prop);
         });
         opts.currProps = currProps;
@@ -99,7 +100,7 @@
         $input.parent().bind('mouseenter.dt mouseleave.dt', function(event) {
           var val = $.trim( $input.val() );
           if ( val !== '' && !$input.data('dtFocused') ) {
-            $input.prev().toggle(event.type == 'mouseenter');
+            $input.prev().toggle(event.type === 'mouseenter');
           }
 
         });
@@ -162,35 +163,38 @@
     }
 
     // bind handlers to inputs' events
-    $inputs.bind('focus.dt', focusText);
-    $inputs.bind('blur.dt', blurText);
-    $inputs.prev()
-    .bind('click.dt', function(event) {
-      $(this).next().trigger('focus.dt');
-    });
+    // but only if no placeholder support
+    if (!$.support.placeholder) {
+      $inputs.bind('focus.dt', focusText);
+      $inputs.bind('blur.dt', blurText);
+      $inputs.prev()
+      .bind('click.dt', function() {
+        $(this).next().trigger('focus.dt');
+      });
 
-    // custom events to programmatically show/hide:
-    $(document)
-    .bind('focusText.dt', focusText)
-    .bind('blurText.dt', blurText);
+      // custom events to programmatically show/hide:
+      $(document)
+      .bind('focusText.dt', focusText)
+      .bind('blurText.dt', blurText);
 
-    // trigger the focus and blur when the window has loaded
-    // trigger is delayed to work around a race condition in Safari's autofill
-    $(window).bind('load', function() {
-      setTimeout(function() {
-        $inputs.each(function() {
+      // trigger the focus and blur when the window has loaded
+      // trigger is delayed to work around a race condition in Safari's autofill
+      $(window).bind('load', function() {
+        setTimeout(function() {
+          $inputs.each(function() {
 
-          focusText({
-            target: this
-          }, 'skip');
+            focusText({
+              target: this
+            }, 'skip');
 
-          blurText({
-            target: this
-          }, 'skip');
+            blurText({
+              target: this
+            }, 'skip');
 
-        });
-      }, delay+loadDelay);
-    });
+          });
+        }, delay+loadDelay);
+      });
+    }
 
     return this;
   };
@@ -216,12 +220,12 @@
     focusComplete: $.noop,
     blurComplete: $.noop,
 
-    // trigges focus/blur on mouseenter/mouseleave
+    // triggers focus/blur on mouseenter/mouseleave
     showOnHover: false
   };
 
   $.extend($.expr[':'], {
-    dtinput: function(element, index, matches, set) {
+    dtinput: function(element) {
       var tag = element.nodeName.toLowerCase();
       return ( tag === 'input' && !(/hidden|file|checkbox|radio/i).test(element.type) ) || tag === 'textarea';
     }
