@@ -1,10 +1,3 @@
-/*!
- * jQuery Default Text Plugin - v2.0.0 - 2017-05-03
- * Copyright (c) 2017 Karl Swedberg
- * Requires jQuery >=1.7.0
- * Licensed MIT (http://www.opensource.org/licenses/mit-license.php)
- */
-
 (function($){
   if ( typeof $.fn.defaulttext !== 'undefined' ) { return; }
 

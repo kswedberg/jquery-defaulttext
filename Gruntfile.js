@@ -1,13 +1,14 @@
 /*global module:false*/
 
 module.exports = function(grunt) {
+  var destFile = 'jquery.defaulttext.js';
+  var srcFile = 'src/' + destFile;
 
   // Load all npm tasks from package.json
   var matchdep = require('matchdep');
   matchdep.filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
-  // Because I'm lazy
-  var _ = grunt.util._;
+  var _ = require('lodash');
   var marked = require('marked');
   // var hl = require('highlight').Highlight;
   //
@@ -23,41 +24,43 @@ module.exports = function(grunt) {
   });
 
   // Project configuration.
-  grunt.initConfig({
+  var gruntConfig = {
     bower: './bower.json',
     pkg: grunt.file.readJSON('package.json'),
     meta: {
       banner: '/*!<%= "\\n" %>' +
-          ' * <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
+          ' * <%= pkg.title %> - v<%= pkg.version %> - ' +
           '<%= grunt.template.today("yyyy-mm-dd")  + "\\n" %>' +
           '<%= pkg.homepage ? " * " + pkg.homepage + "\\n" : "" %>' +
           ' * Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>' +
           '<%= "\\n" %>' +
-          ' * Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %>' +
-          ' (<%= _.pluck(pkg.licenses, "url").join(", ") %>)' +
+          ' * Requires jQuery <%= pkg.dependencies.jquery %>' +
+          '<%= "\\n" %>' +
+          ' * Licensed <%= pkg.license %>' +
+          ' (http://www.opensource.org/licenses/mit-license.php)' +
           '<%= "\\n" %>' + ' */' +
           '<%= "\\n\\n" %>'
     },
     concat: {
       all: {
-        src: ['src/jquery.<%= pkg.name %>.js'],
-        dest: 'jquery.<%= pkg.name %>.js'
+        src: [srcFile],
+        dest: destFile
       },
       options: {
         stripBanners: true,
         banner: '<%= meta.banner %>'
       }
     },
-    uglify: {
-      all: {
-        files: {
-          'jquery.<%= pkg.name %>.min.js': ['<%= concat.all.dest %>']
-        },
-        options: {
-          preserveComments: 'some'
-        }
-      }
-    },
+    // uglify: {
+    //   all: {
+    //     files: {
+    //       'jquery.defaulttext.min.js': ['<%= concat.all.dest %>']
+    //     },
+    //     options: {
+    //       preserveComments: 'some'
+    //     }
+    //   }
+    // },
     watch: {
       scripts: {
         files: '<%= jshint.all %>',
@@ -91,51 +94,56 @@ module.exports = function(grunt) {
       }
     },
     version: {
-      patch: {
-        src: [
-          '<%= pkg.name %>.jquery.json',
-          'package.json',
-          'src/jquery.<%= pkg.name %>.js',
-          'jquery.<%= pkg.name %>.js'
-        ],
-        options: {
-          release: 'patch'
-        }
-      },
       same: {
-        src: ['package.json', 'src/jquery.<%= pkg.name %>.js', 'jquery.<%= pkg.name %>.js']
+        src: ['package.json', destFile]
       },
-      bannerPatch: {
-        src: ['jquery.<%= pkg.name %>.js'],
+      bannersame: {
+        src: [destFile],
         options: {
           prefix: '- v',
-          release: 'patch'
         }
       }
     }
+  };
+
+  var releases = ['patch', 'minor', 'major'];
+
+  releases.forEach(function(release) {
+    gruntConfig.version[release] = {
+      src: [
+        'package.json',
+      ],
+      options: {
+        release: release
+      }
+    };
+
+    gruntConfig.version['banner' + release] = {
+      src: [destFile],
+      options: {
+        prefix: '- v',
+        release: release
+      }
+    };
   });
 
+  grunt.config.init(gruntConfig);
 
   grunt.registerTask( 'bower', 'Update bower.json', function() {
-    var comp = grunt.config('bower'),
-        pkgName = grunt.config('pkg').name,
-        pkg = grunt.file.readJSON(pkgName + '.jquery.json'),
-        json = {};
-
-    ['name', 'version', 'dependencies'].forEach(function(el) {
-      json[el] = pkg[el];
-    });
-
-    _.extend(json, {
+    var comp = grunt.config('bower');
+    var pkg = grunt.file.readJSON('package.json');
+    var json = {
+      name: 'jquery.defaulttext',
+      version: pkg.version,
       main: grunt.config('concat.all.dest'),
+      dependencies: pkg.dependencies,
       ignore: [
         'demo/',
         'lib/',
         'src/',
         '*.json'
       ]
-    });
-    json.name = 'jquery.' + json.name;
+    };
 
     grunt.file.write( comp, JSON.stringify(json, null, 2) );
     grunt.log.writeln( 'File "' + comp + '" updated."' );
@@ -151,8 +159,11 @@ module.exports = function(grunt) {
     grunt.file.write('index.html', head + doc + foot);
   });
 
-  grunt.registerTask('build', ['jshint', 'concat', 'version:same', 'bower', 'uglify', 'docs']);
-  grunt.registerTask('patch', ['jshint', 'concat', 'version:bannerPatch', 'version:patch', 'bower', 'uglify']);
+  grunt.registerTask('build', ['jshint', 'concat', 'version:same', 'bower', 'docs']);
+  releases.forEach(function(release) {
+    grunt.registerTask(release, ['jshint', 'concat', 'version:banner' + release, 'version:' + release, 'bower']);
+  });
+
   grunt.registerTask('default', ['build']);
 
 };
