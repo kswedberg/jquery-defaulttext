@@ -1,5 +1,7 @@
 # Default Text jQuery Plugin
 
+**NOTE:** This plugin is no longer maintained, and it is _unnecessary_ unless you still need to support Internet Explorer < 9 for some reason (and I'd love to know what that reason might be).
+
 This is a simple jQuery plugin that overlays a span on top of the matched set of input elements with text that can come from the input's label, a static string, the return value of a function, or some attribute of the input itself, such as the title or placeholder.
 
 The placeholder attribute will always take precedence, if the browser supports it and if the author has added the attribute to the input in the markup.
